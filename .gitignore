@@ -1,0 +1,29 @@
+# ASP.NET Core
+*.swp
+*.*~
+project.lock.json
+.project
+.classpath
+/obj/
+/bin/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Secrets and Config
+# appsettings.json - Un-ignored for deployment
+appsettings.json
+appsettings.Development.json
+appsettings.Production.json
+#appsettings.Production.json - Un-ignored for deployment
+secrets.json
+.env
+
+# Tooling
+.vscode/
+.idea/
+.vs/

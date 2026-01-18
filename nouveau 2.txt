@@ -1,0 +1,71 @@
+peux tu verifier dans ++++ que tout
+ fonctionne au niveau vuex store action dispatch 
+ et appel axios vers le controller
+
+Sanitize: Create a copy of the item (apiItem), map the temporary frontend 
+id
+ to frontendId, and delete the 
+id
+ field. This ensures the payload sent to the backend allows MongoDB to autogenerate a valid ObjectId.
+Sync: Upon successful creation, it captures the response from the backend (which contains the new real 
+id
+) and updates the local item in the store via 
+UPDATE_ADDITION_GLOBAL
+. This ensures that subsequent actions like Delete will use the correct backend ID.
+Error Handling: Added try/catch blocks to 
+add
+, 
+update
+, and 
+delete
+ actions to prevent unhandled promise rejections.
+ 
+ 
+ grep -n "יש ללחוץ לפחות שניה אחת" c:\human\src\views\ShiftsView.vue
+
+grep : Le terme �grep� n'est pas reconnu comme nom d'applet de commande, fonction, fichier de script ou programme 
+ex�cutable. V�rifiez l'orthographe du nom, ou si un chemin d'acc�s existe, v�rifiez que le chemin d'acc�s est correct 
+et r�essayez.
+Au caract�re Ligne:1 : 1
++ grep -n "?? ????? ????? ???? ???" c:\human\src\views\ShiftsView.vue
++ ~~~~
+    + CategoryInfo          : ObjectNotFound: (grep:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+
+8000Brach0t-
+
+ssh root@76.13.1.190
+
+docker-compose up
+
+
+1. Sur votre ordinateur (Local)
+git add .
+git commit -m "Description de la mise à jour"
+git push
+
+
+2. Sur le VPS (SSH)
+Une fois le code poussé, connectez-vous à votre serveur et lancez ces deux commandes magiques dans le dossier du projet :
+
+A. Mettre à jour le code :
+cd /var/www/monsite
+git pull
+
+B. Mettre à jour l'application (Reconstruire et Redémarrer) :
+docker-compose up -d --build
+
+
+DNS/Nameservers
+ancien 
+Edit
+ns1.dns-parking.com
+ns2.dns-parking.com
+
+
+nouveau
+
+duke.ns.cloudflare.com
+
+piper.ns.cloudflare.com
