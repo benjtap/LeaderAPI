@@ -53,7 +53,7 @@ if (builder.Environment.IsDevelopment())
 else if
  (builder.Environment.IsProduction())
 {
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "10001";
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 }
 
