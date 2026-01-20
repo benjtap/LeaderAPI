@@ -380,4 +380,30 @@ namespace PaieApi.Models
         [BsonElement("percent")]
         public decimal Percent { get; set; }
     }
+
+    public class Lead
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Phone { get; set; }
+        public string Initial { get; set; }
+        public string Color { get; set; }
+        public bool Vip { get; set; }
+        public bool IsIcon { get; set; }
+        public string Email { get; set; }
+    }
+
+    public class Activity
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Initial { get; set; }
+        public string Color { get; set; }
+        public string TextColor { get; set; }
+        public string Type { get; set; } // incoming, missed, outgoing
+        public string Time { get; set; }
+        public DateTime Date { get; set; }
+        public bool IsExpanded { get; set; }
+        public bool IsIcon { get; set; }
+    }
 }

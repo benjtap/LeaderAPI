@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using LeaderApi.Services; 
 
 namespace LeaderApi.Controllers
 {
@@ -10,16 +11,57 @@ namespace LeaderApi.Controllers
         [HttpGet]
         public IActionResult GetLeads()
         {
-            var leads = new List<object>
-            {
-                new { Id = 1, Name = "בנק מזרחי", Phone = "076-804-8860", Initial = "ב", Color = "#3f51b5", Vip = false },
-                new { Id = 2, Name = "hr", Phone = "054-508-4222", Initial = "H", Color = "#e0b0ff", Vip = false },
-                new { Id = 3, Name = "Bnei", Phone = "052-632-0677", Initial = "B", Color = "#fdd835", Vip = true },
-                new { Id = 4, Name = "03-552-9320", Phone = "", Initial = (string)null, IsIcon = true, Color = "#6200ea", Vip = false },
-                new { Id = 5, Name = "054-740-7421", Phone = "", Initial = (string)null, IsIcon = true, Color = "#6200ea", Vip = false }
-            };
+            return Ok(InMemoryStore.Leads);
+        }
 
-            return Ok(leads);
+        [HttpPost("sync")]
+        public IActionResult SyncContacts([FromBody] List<ContactDto> contacts)
+        {
+            if (contacts == null || contacts.Count == 0) return Ok(new { count = 0 });
+
+            int addedCount = 0;
+            foreach (var c in contacts)
+            {
+                var contactName = (c.name != null && c.name.Count > 0) ? c.name[0] : "Unknown";
+                var contactPhone = (c.tel != null && c.tel.Count > 0) ? c.tel[0] : "";
+
+                // Check if exists
+                if (!InMemoryStore.Leads.Exists(l => l.Phone == contactPhone || l.Name == contactName))
+                {
+                    var newLead = new PaieApi.Models.Lead
+                    {
+                        Id = InMemoryStore.Leads.Count + 1,
+                        Name = contactName,
+                        Phone = contactPhone,
+                        Initial = (!string.IsNullOrEmpty(contactName)) ? contactName.Substring(0, 1).ToUpper() : "?",
+                        Color = "#6200ea",
+                        Vip = false
+                    };
+                    InMemoryStore.Leads.Insert(0, newLead);
+                    addedCount++;
+
+                    // ALSO CREATE FAKE ACTIVITY for "Recent Call" simulation
+                    var newActivity = new PaieApi.Models.Activity
+                    {
+                        Id = InMemoryStore.Activities.Count + 1,
+                        Name = newLead.Name,
+                        Initial = newLead.Initial,
+                        Color = newLead.Color,
+                        Type = "incoming", // Pretend they called us
+                        Time = System.DateTime.Now.ToString("h:mm tt"),
+                        Date = System.DateTime.Now,
+                        IsExpanded = false
+                    };
+                    InMemoryStore.Activities.Insert(0, newActivity);
+                }
+            }
+            return Ok(new { count = addedCount, message = $"Synced {addedCount} contacts" });
+        }
+
+        public class ContactDto
+        {
+            public List<string> name { get; set; }
+            public List<string> tel { get; set; }
         }
     }
 }
