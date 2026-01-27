@@ -57,8 +57,18 @@ namespace PaieApi.DTOs
         public string Id { get; set; }
         public string Username { get; set; }
         public string Telephone { get; set; }
+        public string? Email { get; set; }
+        public string Role { get; set; }
         public bool TelephoneVerifie { get; set; }
         public DateTime DateCreation { get; set; }
         public DateTime? DerniereConnexion { get; set; }
+    }
+
+    public class GoogleLoginRequest
+    {
+        public string ServerAuthCode { get; set; }
+        public string Email { get; set; }
+        public string Name { get; set; }
+        public string IdToken { get; set; }
     }
 }

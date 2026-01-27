@@ -29,6 +29,12 @@ namespace PaieApi.Models
 
         [BsonElement("actif")]
         public bool Actif { get; set; }
+
+        [BsonElement("email")]
+        public string? Email { get; set; }
+
+        [BsonElement("role")]
+        public string Role { get; set; } = "User"; // "Admin", "User", "Manager"
     }
 
     // Collection pour suivre les tentatives de connexion
@@ -383,27 +389,90 @@ namespace PaieApi.Models
 
     public class Lead
     {
-        public int Id { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
+
+        [BsonElement("userId")]
+        public string? UserId { get; set; }
+
+        [BsonElement("listType")]
+        public string ListType { get; set; } = "lead"; // lead, quotes, followup, notrelevant, closeddeals
+
+        [BsonElement("name")]
         public string Name { get; set; }
+
+        [BsonElement("phone")]
         public string Phone { get; set; }
+
+        [BsonElement("email")]
+        public string? Email { get; set; }
+
+        [BsonElement("description")]
+        public string? Description { get; set; }
+
+        [BsonElement("initial")]
         public string Initial { get; set; }
+
+        [BsonElement("color")]
         public string Color { get; set; }
+
+        [BsonElement("vip")]
         public bool Vip { get; set; }
+
+        [BsonElement("isIcon")]
         public bool IsIcon { get; set; }
-        public string Email { get; set; }
+
+        [BsonElement("sourceId")]
+        public string? SourceId { get; set; } // Link to original activity if moved
+        
+        [BsonElement("createdAt")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 
     public class Activity
     {
-        public int Id { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
+
+        [BsonElement("userId")]
+        public string? UserId { get; set; }
+
+        [BsonElement("name")]
         public string Name { get; set; }
+
+        [BsonElement("number")]
+        public string Number { get; set; } // Caller ID
+
+        [BsonElement("initial")]
         public string Initial { get; set; }
+
+        [BsonElement("color")]
         public string Color { get; set; }
+
+        [BsonElement("textColor")]
         public string TextColor { get; set; }
+
+        [BsonElement("type")]
         public string Type { get; set; } // incoming, missed, outgoing
+
+        [BsonElement("timestamp")]
+        public long Timestamp { get; set; } // Unix timestamp preferred for syncing
+
+        [BsonElement("time")]
         public string Time { get; set; }
+
+        [BsonElement("date")]
         public DateTime Date { get; set; }
+
+        [BsonElement("duration")]
+        public int Duration { get; set; }
+
+        [BsonElement("isExpanded")]
         public bool IsExpanded { get; set; }
+
+        [BsonElement("isIcon")]
         public bool IsIcon { get; set; }
     }
 }

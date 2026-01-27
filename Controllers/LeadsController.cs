@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using LeaderApi.Services; 
+using PaieApi.Services; 
+using System.Threading.Tasks;
+using System.Security.Claims;
+using PaieApi.Models;
 
 namespace LeaderApi.Controllers
 {
@@ -8,54 +11,80 @@ namespace LeaderApi.Controllers
     [Route("api/[controller]")]
     public class LeadsController : ControllerBase
     {
-        [HttpGet]
-        public IActionResult GetLeads()
+        private readonly LeadsService _leadsService;
+
+        public LeadsController(LeadsService leadsService)
         {
-            return Ok(InMemoryStore.Leads);
+            _leadsService = leadsService;
+        }
+
+        private string GetUserId()
+        {
+             // Fallback for dev/local without full auth
+            return User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "default_user";
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetLeads()
+        {
+            var leads = await _leadsService.GetByListTypeAsync(GetUserId(), "lead");
+            return Ok(leads);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateLead([FromBody] Lead lead)
+        {
+            if (lead == null) return BadRequest();
+
+            lead.UserId = GetUserId();
+            lead.ListType = "lead"; // Force type
+            
+            if (string.IsNullOrEmpty(lead.Initial) && !string.IsNullOrEmpty(lead.Name))
+            {
+                lead.Initial = lead.Name.Substring(0,1).ToUpper();
+            }
+            if (string.IsNullOrEmpty(lead.Color)) lead.Color = "#6200ea";
+            
+            await _leadsService.CreateAsync(lead);
+            return Ok(lead);
         }
 
         [HttpPost("sync")]
-        public IActionResult SyncContacts([FromBody] List<ContactDto> contacts)
+        public async Task<IActionResult> SyncContacts([FromBody] List<ContactDto> contacts)
         {
-            if (contacts == null || contacts.Count == 0) return Ok(new { count = 0 });
+            int count = await _leadsService.SyncContactsAsync(GetUserId(), contacts);
+            return Ok(new { count = count, message = $"Synced {count} contacts" });
+        }
 
-            int addedCount = 0;
-            foreach (var c in contacts)
-            {
-                var contactName = (c.name != null && c.name.Count > 0) ? c.name[0] : "Unknown";
-                var contactPhone = (c.tel != null && c.tel.Count > 0) ? c.tel[0] : "";
+        [HttpPost("cleanup")]
+        public async Task<IActionResult> CleanupDuplicates()
+        {
+            int removed = await _leadsService.RemoveDuplicatesAsync(GetUserId());
+            return Ok(new { removed = removed, message = $"Removed {removed} duplicates" });
+        }
 
-                // Check if exists
-                if (!InMemoryStore.Leads.Exists(l => l.Phone == contactPhone || l.Name == contactName))
-                {
-                    var newLead = new PaieApi.Models.Lead
-                    {
-                        Id = InMemoryStore.Leads.Count + 1,
-                        Name = contactName,
-                        Phone = contactPhone,
-                        Initial = (!string.IsNullOrEmpty(contactName)) ? contactName.Substring(0, 1).ToUpper() : "?",
-                        Color = "#6200ea",
-                        Vip = false
-                    };
-                    InMemoryStore.Leads.Insert(0, newLead);
-                    addedCount++;
+        [HttpPost("move")]
+        public async Task<IActionResult> MoveLead([FromBody] MoveLeadDto dto)
+        {
+            if (string.IsNullOrEmpty(dto.Id) || string.IsNullOrEmpty(dto.TargetType)) return BadRequest();
 
-                    // ALSO CREATE FAKE ACTIVITY for "Recent Call" simulation
-                    var newActivity = new PaieApi.Models.Activity
-                    {
-                        Id = InMemoryStore.Activities.Count + 1,
-                        Name = newLead.Name,
-                        Initial = newLead.Initial,
-                        Color = newLead.Color,
-                        Type = "incoming", // Pretend they called us
-                        Time = System.DateTime.Now.ToString("h:mm tt"),
-                        Date = System.DateTime.Now,
-                        IsExpanded = false
-                    };
-                    InMemoryStore.Activities.Insert(0, newActivity);
-                }
-            }
-            return Ok(new { count = addedCount, message = $"Synced {addedCount} contacts" });
+            var updated = await _leadsService.MoveLeadAsync(GetUserId(), dto.Id, dto.TargetType);
+            if (updated == null) return NotFound("Lead not found");
+            
+            return Ok(updated);
+        }
+
+        [HttpDelete("all")]
+        public async Task<IActionResult> DeleteAllLeads()
+        {
+            var count = await _leadsService.DeleteAllAsync(GetUserId());
+            return Ok(new { message = $"Deleted {count} leads" });
+        }
+
+        public class MoveLeadDto
+        {
+            public string Id { get; set; }
+            public string TargetType { get; set; }
         }
 
         public class ContactDto

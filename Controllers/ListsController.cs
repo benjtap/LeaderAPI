@@ -1,5 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using PaieApi.Services;
+using System.Threading.Tasks;
+using System.Security.Claims;
+using PaieApi.Models;
 
 namespace LeaderApi.Controllers
 {
@@ -7,28 +11,63 @@ namespace LeaderApi.Controllers
     [Route("api/[controller]")]
     public class ListsController : ControllerBase
     {
-        [HttpGet("quotes")]
-        public IActionResult GetQuotes()
+        private readonly LeadsService _leadsService;
+
+        public ListsController(LeadsService leadsService)
         {
-            // Empty for now as per image
-            return Ok(new List<object>()); 
+            _leadsService = leadsService;
+        }
+
+        private string GetUserId()
+        {
+            return User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "default_user";
+        }
+
+        [HttpGet("quotes")]
+        public async Task<IActionResult> GetQuotes()
+        {
+             var list = await _leadsService.GetByListTypeAsync(GetUserId(), "quotes");
+             return Ok(list);
         }
 
         [HttpGet("followup")]
-        public IActionResult GetFollowUp()
+        public async Task<IActionResult> GetFollowUp()
         {
-             var list = new List<object>
-            {
-                new { Id = 1, Name = "Follow Up 1", Sub = "Call back later", Initial = "F", Color = "#ff9800" },
-                new { Id = 2, Name = "Follow Up 2", Sub = "Meeting scheduled", Initial = "M", Color = "#4caf50" }
-            };
-            return Ok(list);
+             var list = await _leadsService.GetByListTypeAsync(GetUserId(), "followup");
+             return Ok(list);
         }
 
         [HttpGet("notrelevant")]
-        public IActionResult GetNotRelevant()
+        public async Task<IActionResult> GetNotRelevant()
         {
-             return Ok(new List<object>()); 
+             var list = await _leadsService.GetByListTypeAsync(GetUserId(), "notrelevant");
+             return Ok(list);
+        }
+
+        [HttpGet("closeddeals")]
+        public async Task<IActionResult> GetClosedDeals()
+        {
+             var list = await _leadsService.GetByListTypeAsync(GetUserId(), "closeddeals");
+             return Ok(list);
+        }
+
+        [HttpPost("{listType}")]
+        public async Task<IActionResult> CreateItem(string listType, [FromBody] Lead item)
+        {
+             if (item == null) return BadRequest();
+
+             item.UserId = GetUserId();
+             item.ListType = listType.ToLower();
+
+             if (string.IsNullOrEmpty(item.Initial) && !string.IsNullOrEmpty(item.Name)) 
+             {
+                 item.Initial = item.Name.Substring(0, 1).ToUpper();
+             }
+             if (string.IsNullOrEmpty(item.Color)) item.Color = "#6200ea";
+            
+             // Validate list type if needed, but for now we accept any string as a bucket
+             await _leadsService.CreateAsync(item);
+             return Ok(item);
         }
     }
 }

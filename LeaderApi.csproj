@@ -27,13 +27,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\AdditionsDeductionsController.cs" />
     <Compile Remove="Controllers\DocumentsController.cs" />
     <Compile Remove="Controllers\HybridController.cs" />
     <Compile Remove="Controllers\MainController.cs" />
     <Compile Remove="Controllers\NewController.cs" />
+    <Compile Remove="Controllers\ReportsController.cs" />
+    <Compile Remove="Controllers\SettingsController.cs" />
+    <Compile Remove="Controllers\ShiftsController.cs" />
+    <Compile Remove="Controllers\ShiftTypesController.cs" />
+    <Compile Remove="Controllers\SystemDataController.cs" />
+    <Compile Remove="Controllers\WeeklyPlanController.cs" />
     <Compile Remove="Models\BookRepository.cs" />
     <Compile Remove="Models\IBookRepository.cs" />
     <Compile Remove="Models\UserModel.cs" />
+    <Compile Remove="Services\AdditionDeductionService.cs" />
     <Compile Remove="Services\AzureService.cs" />
     <Compile Remove="Services\BaseRowService.cs" />
     <Compile Remove="Services\FileSystemImageStorageService.cs" />
@@ -41,14 +49,20 @@
     <Compile Remove="Services\HybridSearchService.cs" />
     <Compile Remove="Services\imageprocessService.cs" />
     <Compile Remove="Services\ImageVectorService.cs" />
+    <Compile Remove="Services\InMemoryStore.cs" />
     <Compile Remove="Services\IRepository.cs" />
     <Compile Remove="Services\IServiceAuth.cs" />
     <Compile Remove="Services\MyRepository.cs" />
     <Compile Remove="Services\Repository.cs" />
     <Compile Remove="Services\ServiceAuth.cs" />
     <Compile Remove="Services\settings.cs" />
+    <Compile Remove="Services\SettingsService.cs" />
+    <Compile Remove="Services\ShiftService.cs" />
+    <Compile Remove="Services\ShiftTypeService.cs" />
+    <Compile Remove="Services\SystemDataService.cs" />
     <Compile Remove="Services\VectorDBImage.cs" />
     <Compile Remove="Services\VectoreDB.cs" />
+    <Compile Remove="Services\WeeklyPlanService.cs" />
     <Compile Remove="Startup.cs" />
     <Compile Remove="Utility.cs" />
   </ItemGroup>

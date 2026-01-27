@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using Twilio;
 using Twilio.Rest.Verify.V2.Service;
+using System.Net.Http.Json;
 
 
 namespace PaieApi.Services
@@ -21,19 +22,143 @@ namespace PaieApi.Services
             private readonly string _twilioAccountSid;
             private readonly string _twilioAuthToken;
             private readonly string _twilioVerifyServiceSid;
+            private readonly string _googleClientId;
+            private readonly string _googleClientSecret;
+            private readonly HttpClient _httpClient;
 
             public AuthService(
                 MongoDbService mongoDb,
                 string twilioAccountSid,
                 string twilioAuthToken,
-                string twilioVerifyServiceSid)
+                string twilioVerifyServiceSid,
+                string googleClientId,
+                string googleClientSecret,
+                IHttpClientFactory httpClientFactory)
             {
                 _mongoDb = mongoDb;
                 _twilioAccountSid = twilioAccountSid;
                 _twilioAuthToken = twilioAuthToken;
                 _twilioVerifyServiceSid = twilioVerifyServiceSid;
+                _googleClientId = googleClientId;
+                _googleClientSecret = googleClientSecret;
+                _httpClient = httpClientFactory.CreateClient();
 
                 TwilioClient.Init(_twilioAccountSid, _twilioAuthToken);
+            }
+
+            // ========== GOOGLE LOGIN ==========
+            public async Task<(bool succes, string message, Utilisateur utilisateur)> GoogleLogin(string serverAuthCode)
+            {
+                try
+                {
+                    // 1. Exchange Code for Token
+                    var tokenResponse = await ExchangeGoogleCodeForToken(serverAuthCode);
+                    if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.access_token))
+                    {
+                        return (false, "Échec de l'échange du code Google", null);
+                    }
+
+                    // 2. Get User Info
+                    var googleUser = await GetGoogleUserInfo(tokenResponse.access_token);
+                    if (googleUser == null || string.IsNullOrEmpty(googleUser.email))
+                    {
+                        return (false, "Impossible de récupérer les infos Google", null);
+                    }
+
+                    // 3. Check / Create User in DB
+                    var existingUser = await _mongoDb.Utilisateurs
+                        .Find(u => u.Email == googleUser.email)
+                        .FirstOrDefaultAsync();
+
+                    if (existingUser != null)
+                    {
+                        // Update Connection Time
+                        var update = Builders<Utilisateur>.Update.Set(u => u.DerniereConnexion, DateTime.UtcNow);
+                        await _mongoDb.Utilisateurs.UpdateOneAsync(u => u.Id == existingUser.Id, update);
+                        
+                        return (true, "Connexion Google réussie", existingUser);
+                    }
+
+                    // 4. Create New User (Seeding Admin if first)
+                    long userCount = await _mongoDb.Utilisateurs.CountDocumentsAsync(_ => true);
+                    string initialRole = (userCount == 0) ? "Admin" : "User";
+
+                    var newUser = new Utilisateur
+                    {
+                        Username = googleUser.name ?? googleUser.email,
+                        Email = googleUser.email,
+                        Telephone = "", // May not be available from Google
+                        TelephoneVerifie = false, // Phone not verified yet 
+                        DateCreation = DateTime.UtcNow,
+                        Actif = true,
+                        Role = initialRole,
+                        DerniereConnexion = DateTime.UtcNow
+                    };
+
+                    await _mongoDb.Utilisateurs.InsertOneAsync(newUser);
+                    return (true, $"Bienvenue {newUser.Username}. Vous êtes connecté en tant que {initialRole}.", newUser);
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Google Login Error: {ex.Message}");
+                    return (false, $"Erreur interne: {ex.Message}", null);
+                }
+            }
+
+            private async Task<GoogleTokenResponse> ExchangeGoogleCodeForToken(string code)
+            {
+                var values = new Dictionary<string, string>
+                {
+                    { "code", code },
+                    { "client_id", _googleClientId },
+                    { "client_secret", _googleClientSecret },
+                    { "redirect_uri", "" }, // For Android/iOS, redirect_uri is often empty or specific string
+                    { "grant_type", "authorization_code" }
+                };
+
+                var content = new FormUrlEncodedContent(values);
+                var response = await _httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Google Token Error: {error}");
+                    return null;
+                }
+
+                return await response.Content.ReadFromJsonAsync<GoogleTokenResponse>();
+            }
+
+            private async Task<GoogleUserInfo> GetGoogleUserInfo(string accessToken)
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                var response = await _httpClient.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
+
+                if (!response.IsSuccessStatusCode) return null;
+
+                return await response.Content.ReadFromJsonAsync<GoogleUserInfo>();
+            }
+
+            // Helper Classes for Google Responses
+            private class GoogleTokenResponse
+            {
+                public string access_token { get; set; }
+                public string id_token { get; set; }
+                public int expires_in { get; set; }
+                public string token_type { get; set; }
+                public string refresh_token { get; set; }
+            }
+
+            private class GoogleUserInfo
+            {
+                public string id { get; set; }
+                public string email { get; set; }
+                public string verified_email { get; set; }
+                public string name { get; set; }
+                public string given_name { get; set; }
+                public string family_name { get; set; }
+                public string picture { get; set; }
             }
 
 
@@ -641,6 +766,8 @@ namespace PaieApi.Services
                     Id = utilisateur.Id,
                     Username = utilisateur.Username,
                     Telephone = utilisateur.Telephone,
+                    Email = utilisateur.Email,
+                    Role = utilisateur.Role ?? "User",
                     TelephoneVerifie = utilisateur.TelephoneVerifie,
                     DateCreation = utilisateur.DateCreation,
                     DerniereConnexion = utilisateur.DerniereConnexion

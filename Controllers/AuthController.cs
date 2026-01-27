@@ -278,6 +278,45 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Connexion via Google (reçoit le code serveur)
+    /// </summary>
+    [HttpPost("google-login")]
+    [ProducesResponseType(typeof(AuthResponse), 200)]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request?.ServerAuthCode))
+        {
+            return BadRequest(new AuthResponse
+            {
+                Succes = false,
+                Message = "Code d'autorisation Google manquant"
+            });
+        }
+
+        var (succes, message, utilisateur) = await _authService.GoogleLogin(request.ServerAuthCode);
+
+        if (!succes || utilisateur == null)
+        {
+             return Ok(new AuthResponse { Succes = false, Message = message });
+        }
+
+        // Generate Token
+        var token = _jwtService.GenerateToken(utilisateur);
+        var utilisateurDto = await _authService.ObtenirUtilisateurDto(utilisateur.Username);
+
+        return Ok(new AuthResponse
+        {
+            Succes = true,
+            Message = message,
+            Data = new ConnexionResponse
+            {
+                Token = token,
+                Utilisateur = utilisateurDto
+            }
+        });
+    }
+
+    /// <summary>
     /// Obtenir le profil de l'utilisateur connecté (protégé)
     /// </summary>
     [Authorize]

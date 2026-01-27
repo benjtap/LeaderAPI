@@ -48,12 +48,14 @@ Console.WriteLine($"🌍 Environnement final : {builder.Environment.EnvironmentN
 if (builder.Environment.IsDevelopment())
 {
     // En développement : HTTP + HTTPS
-    builder.WebHost.UseUrls("http://localhost:5000", "https://localhost:5001");
+    builder.WebHost.UseUrls("http://0.0.0.0:5000", "https://0.0.0.0:5001");
 }
 else if
  (builder.Environment.IsProduction())
 {
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "10001";
+     var port = Environment.GetEnvironmentVariable("PORT") ?? "10001";
+
+    //var port = 5000;//Environment.GetEnvironmentVariable("PORT") ?? "10001";
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 }
 
@@ -143,17 +145,22 @@ builder.Services.AddScoped<AuthService>(sp =>
         mongoDb,
         config["Twilio:AccountSid"],
         config["Twilio:AuthToken"],
-        config["Twilio:VerifyServiceSid"]
+        config["Twilio:VerifyServiceSid"],
+        config["Google:ClientId"],
+        config["Google:ClientSecret"],
+        sp.GetRequiredService<IHttpClientFactory>()
     );
 });
 
-builder.Services.AddScoped<ShiftService>();
-builder.Services.AddScoped<WeeklyPlanService>();
-builder.Services.AddScoped<ExcelService>();
-builder.Services.AddScoped<ShiftTypeService>();
-builder.Services.AddScoped<SettingsService>();
-builder.Services.AddScoped<AdditionDeductionService>();
-builder.Services.AddScoped<SystemDataService>();
+//builder.Services.AddScoped<ShiftService>();
+//builder.Services.AddScoped<WeeklyPlanService>();
+//builder.Services.AddScoped<ExcelService>();
+//builder.Services.AddScoped<ShiftTypeService>();
+//builder.Services.AddScoped<SettingsService>();
+//builder.Services.AddScoped<AdditionDeductionService>();
+//builder.Services.AddScoped<SystemDataService>();
+builder.Services.AddScoped<LeadsService>();
+builder.Services.AddScoped<ActivitiesService>();
 
 // JWT Service
 builder.Services.AddScoped<JwtService>();

@@ -22,6 +22,8 @@ namespace PaieApi.Services
         public IMongoCollection<AdditionDeduction> AdditionsDeductions { get; }
         public IMongoCollection<PaymentType> PaymentTypes { get; }
         public IMongoCollection<SickType> SickTypes { get; }
+        public IMongoCollection<Lead> Leads { get; }
+        public IMongoCollection<Activity> Activities { get; }
 
         public MongoDbService(string connectionString, string databaseName)
         {
@@ -39,6 +41,8 @@ namespace PaieApi.Services
             AdditionsDeductions = _database.GetCollection<AdditionDeduction>("additions_deductions");
             PaymentTypes = _database.GetCollection<PaymentType>("payment_types");
             SickTypes = _database.GetCollection<SickType>("sick_types");
+            Leads = _database.GetCollection<Lead>("leads");
+            Activities = _database.GetCollection<Activity>("activities");
 
             // Créer les index
             CreerIndex();

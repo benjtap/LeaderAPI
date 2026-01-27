@@ -82,5 +82,9 @@ namespace LeaderApi.Services
                 IsExpanded = false
             }
         };
+        public static List<Lead> Quotes = new List<Lead>();
+        public static List<Lead> FollowUp = new List<Lead>();
+        public static List<Lead> NotRelevant = new List<Lead>();
+        public static List<Lead> ClosedDeals = new List<Lead>();
     }
 }
