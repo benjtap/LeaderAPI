@@ -53,6 +53,9 @@ A. Mettre à jour le code :
 cd /var/www/monsite
 git pull
 
+git reset --hard HEAD
+git pull
+
 B. Mettre à jour l'application (Reconstruire et Redémarrer) :
 docker-compose up -d --build
 
@@ -62,8 +65,8 @@ ancien
 Edit
 ns1.dns-parking.com
 ns2.dns-parking.com
-
-
+jdk
+812345Brach0t-
 nouveau
 
 duke.ns.cloudflare.com
