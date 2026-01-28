@@ -195,6 +195,10 @@ namespace PaieApi.Services
                         return (false, "Ce numéro est déjà enregistré");
                     }
 
+                    // Calculer le rôle (Admin pour le premier, User sinon)
+                    long userCount = await _mongoDb.Utilisateurs.CountDocumentsAsync(_ => true);
+                    string initialRole = (userCount == 0) ? "Admin" : "User";
+
                     // Créer l'utilisateur
                     var nouvelUtilisateur = new Utilisateur
                     {
@@ -202,7 +206,8 @@ namespace PaieApi.Services
                         Telephone = telephone,
                         TelephoneVerifie = false,
                         DateCreation = DateTime.UtcNow,
-                        Actif = true
+                        Actif = true,
+                        Role = initialRole
                     };
 
                     await _mongoDb.Utilisateurs.InsertOneAsync(nouvelUtilisateur);
@@ -342,6 +347,10 @@ namespace PaieApi.Services
                         return (false, "Ce numéro de téléphone est déjà enregistré");
                     }
 
+                    // Calculer le rôle
+                    long userCount = await _mongoDb.Utilisateurs.CountDocumentsAsync(_ => true);
+                    string initialRole = (userCount == 0) ? "Admin" : "User";
+
                     // Créer l'utilisateur
                     var nouvelUtilisateur = new Utilisateur
                     {
@@ -349,7 +358,8 @@ namespace PaieApi.Services
                         Telephone = telephone,
                         TelephoneVerifie = false,
                         DateCreation = DateTime.UtcNow,
-                        Actif = true
+                        Actif = true,
+                        Role = initialRole
                     };
 
                     await _mongoDb.Utilisateurs.InsertOneAsync(nouvelUtilisateur);
