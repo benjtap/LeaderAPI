@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PaieApi.DTOs;
 using PaieApi.Services;
-using PaieApi.Services.PaieApi.Services;
+
 using System.Security.Claims;
 
 [ApiController]

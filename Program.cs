@@ -16,7 +16,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PaieApi.Services;
-using PaieApi.Services.PaieApi.Services;
+
 using System.Text;
 
 
@@ -161,6 +161,7 @@ builder.Services.AddScoped<AuthService>(sp =>
 //builder.Services.AddScoped<SystemDataService>();
 builder.Services.AddScoped<LeadsService>();
 builder.Services.AddScoped<ActivitiesService>();
+builder.Services.AddScoped<TenantService>();
 
 // JWT Service
 builder.Services.AddScoped<JwtService>();

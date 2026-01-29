@@ -24,6 +24,8 @@ namespace PaieApi.Services
         public IMongoCollection<SickType> SickTypes { get; }
         public IMongoCollection<Lead> Leads { get; }
         public IMongoCollection<Activity> Activities { get; }
+        public IMongoCollection<Tenant> Tenants { get; }
+        public IMongoCollection<Invitation> Invitations { get; }
 
         public MongoDbService(string connectionString, string databaseName)
         {
@@ -43,6 +45,8 @@ namespace PaieApi.Services
             SickTypes = _database.GetCollection<SickType>("sick_types");
             Leads = _database.GetCollection<Lead>("leads");
             Activities = _database.GetCollection<Activity>("activities");
+            Tenants = _database.GetCollection<Tenant>("tenants");
+            Invitations = _database.GetCollection<Invitation>("invitations");
 
             // Créer les index
             CreerIndex();

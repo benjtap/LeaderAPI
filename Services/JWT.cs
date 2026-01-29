@@ -22,13 +22,19 @@ namespace PaieApi.Services
 
         public string GenerateToken(Utilisateur utilisateur)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
-            new Claim(ClaimTypes.NameIdentifier, utilisateur.Id),
-            new Claim(ClaimTypes.Name, utilisateur.Username),
-            new Claim("telephone", utilisateur.Telephone),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+                new Claim(ClaimTypes.NameIdentifier, utilisateur.Id),
+                new Claim(ClaimTypes.Name, utilisateur.Username),
+                new Claim("telephone", utilisateur.Telephone),
+                new Claim(ClaimTypes.Role, utilisateur.Role),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            if (!string.IsNullOrEmpty(utilisateur.TenantId))
+            {
+                claims.Add(new Claim("tenant_id", utilisateur.TenantId));
+            }
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])

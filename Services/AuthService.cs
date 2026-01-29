@@ -11,12 +11,7 @@ using System.Net.Http.Json;
 
 namespace PaieApi.Services
 {
-
-   
-
-    namespace PaieApi.Services
-    {
-        public class AuthService
+    public class AuthService
         {
             private readonly MongoDbService _mongoDb;
             private readonly string _twilioAccountSid;
@@ -763,6 +758,13 @@ namespace PaieApi.Services
                 }
             }
 
+            public async Task<Utilisateur> ObtenirUtilisateurParId(string id)
+            {
+                return await _mongoDb.Utilisateurs
+                    .Find(u => u.Id == id)
+                    .FirstOrDefaultAsync();
+            }
+
             public async Task<UtilisateurDto> ObtenirUtilisateurDto(string username)
             {
                 var utilisateur = await _mongoDb.Utilisateurs
@@ -780,7 +782,8 @@ namespace PaieApi.Services
                     Role = utilisateur.Role ?? "User",
                     TelephoneVerifie = utilisateur.TelephoneVerifie,
                     DateCreation = utilisateur.DateCreation,
-                    DerniereConnexion = utilisateur.DerniereConnexion
+                    DerniereConnexion = utilisateur.DerniereConnexion,
+                    TenantId = utilisateur.TenantId
                 };
             }
 
@@ -817,4 +820,3 @@ namespace PaieApi.Services
         }
     }
 
-}

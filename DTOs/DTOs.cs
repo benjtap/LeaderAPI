@@ -62,6 +62,7 @@ namespace PaieApi.DTOs
         public bool TelephoneVerifie { get; set; }
         public DateTime DateCreation { get; set; }
         public DateTime? DerniereConnexion { get; set; }
+        public string? TenantId { get; set; }
     }
 
     public class GoogleLoginRequest

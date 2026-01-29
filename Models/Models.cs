@@ -35,6 +35,9 @@ namespace PaieApi.Models
 
         [BsonElement("role")]
         public string Role { get; set; } = "User"; // "Admin", "User", "Manager"
+
+        [BsonElement("tenantId")]
+        public string? TenantId { get; set; }
     }
 
     // Collection pour suivre les tentatives de connexion
@@ -451,6 +454,7 @@ namespace PaieApi.Models
         [BsonElement("color")]
         public string Color { get; set; }
 
+
         [BsonElement("textColor")]
         public string TextColor { get; set; }
 
@@ -474,5 +478,58 @@ namespace PaieApi.Models
 
         [BsonElement("isIcon")]
         public bool IsIcon { get; set; }
+    }
+
+    public class Tenant
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; }
+
+        [BsonElement("name")]
+        public string Name { get; set; } // Company Name
+
+        [BsonElement("industry")]
+        public string Industry { get; set; }
+
+        [BsonElement("companySize")]
+        public string CompanySize { get; set; }
+
+        [BsonElement("ownerId")]
+        public string OwnerId { get; set; } // The user who created this tenant
+
+        [BsonElement("createdAt")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [BsonElement("members")]
+        public List<string> Members { get; set; } = new List<string>(); // List of UserIds
+    }
+
+    public class Invitation
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; }
+
+        [BsonElement("tenantId")]
+        public string TenantId { get; set; }
+
+        [BsonElement("email")]
+        public string Email { get; set; }
+
+        [BsonElement("invitedBy")]
+        public string InvitedBy { get; set; } // UserId of inviter
+
+        [BsonElement("role")]
+        public string Role { get; set; } = "Member";
+
+        [BsonElement("status")]
+        public string Status { get; set; } = "Pending"; // Pending, Accepted
+
+        [BsonElement("token")]
+        public string Token { get; set; } // Unique link token
+
+        [BsonElement("createdAt")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
