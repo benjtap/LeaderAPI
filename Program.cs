@@ -162,6 +162,7 @@ builder.Services.AddScoped<AuthService>(sp =>
 builder.Services.AddScoped<LeadsService>();
 builder.Services.AddScoped<ActivitiesService>();
 builder.Services.AddScoped<TenantService>();
+builder.Services.AddScoped<EmailService>();
 
 // JWT Service
 builder.Services.AddScoped<JwtService>();
@@ -209,6 +210,7 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 
+app.UseStaticFiles();
 
 app.UseExceptionHandler(errorApp =>
 {

@@ -19,12 +19,14 @@ namespace LeaderApi.Controllers
         private readonly IMongoCollection<Invitation> _invitations;
         private readonly IMongoCollection<Tenant> _tenants;
         private readonly IMongoCollection<Utilisateur> _users;
+        private readonly EmailService _emailService;
 
-        public InvitationsController(MongoDbService mongoDbService)
+        public InvitationsController(MongoDbService mongoDbService, EmailService emailService)
         {
             _invitations = mongoDbService.Invitations;
             _tenants = mongoDbService.Tenants;
             _users = mongoDbService.Utilisateurs;
+            _emailService = emailService;
         }
 
         [HttpPost]
@@ -98,9 +100,19 @@ namespace LeaderApi.Controllers
 
                 await _invitations.InsertOneAsync(invitation);
                 
-                // --- MOCK EMAIL SENDING ---
-                Console.WriteLine($"[EMAIL MOCK] To: {email}, Link: /register?token={invitation.Token}");
-                // --------------------------
+                string joinUrl = $"{Request.Scheme}://{Request.Host}/api/invitations/landing?token={invitation.Token}";
+                
+                string htmlBody = $@"
+<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;'>
+    <h2 style='color: #6200ea;'>Leader App</h2>
+    <p>You have been invited to join a workspace on Leader.</p>
+    <p><strong>Tenant:</strong> {tenantId} (Name loading...)</p>
+    <p>Click the button below to join:</p>
+    <a href='{joinUrl}' style='display: inline-block; background-color: #6200ea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;'>Join Workspace</a>
+    <p style='margin-top: 20px; font-size: 12px; color: #888;'>If you don't have the app installed, the button will help you install it.</p>
+</div>";
+
+                await _emailService.SendEmailAsync(email, "Invitation to Leader Workspace", htmlBody);
 
                 results.Add(new { email, status = "Invited", token = invitation.Token });
             }
@@ -189,6 +201,60 @@ namespace LeaderApi.Controllers
             await _invitations.UpdateOneAsync(i => i.Id == invitation.Id, inviteUpdate);
 
             return Ok(new { success = true, tenantId = invitation.TenantId, message = "Joined tenant successfully" });
+        }
+
+        [HttpGet("landing")]
+        [AllowAnonymous]
+        public IActionResult LandingPage([FromQuery] string token)
+        {
+            // Simple HTML Landing Page
+            // Logic:
+            // 1. Button "Open App" -> deep link 'leader://invite?token=...'
+            // 2. Button "Download APK" -> direct link '/leader-app.apk'
+            
+            var deepLink = $"leader://invite?token={token}";
+            var downloadLink = "/leader-app.apk"; // Served by StaticFiles from wwwroot
+
+            string html = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {{ font-family: 'Segoe UI', sans-serif; text-align: center; padding: 40px 20px; background: #f9f9f9; }}
+        .card {{ background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto; }}
+        h1 {{ color: #6200ea; margin-bottom: 30px; }}
+        .btn {{ display: block; width: 100%; padding: 15px 0; border: none; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; text-decoration: none; margin-bottom: 15px; box-sizing: border-box; }}
+        .btn-primary {{ background: #6200ea; color: white; }}
+        .btn-secondary {{ background: #e0e0e0; color: #333; }}
+        .hint {{ font-size: 13px; color: #777; margin-top: 20px; }}
+    </style>
+    <script>
+        function openApp() {{
+            window.location.href = '{deepLink}';
+             // Fallback if app not installed (simple timeout)
+            setTimeout(function() {{
+               // document.getElementById('dl-hint').style.display = 'block';
+            }}, 2000);
+        }}
+        // Auto-try open on load? Maybe annoying. Let user click.
+    </script>
+</head>
+<body>
+    <div class='card'>
+        <h1>Leader App</h1>
+        <p>You've been invited!</p>
+        
+        <a href='javascript:openApp()' class='btn btn-primary'>Open App & Join</a>
+        
+        <a href='{downloadLink}' class='btn btn-secondary'>Download App (APK)</a>
+
+        <p class='hint' id='dl-hint'>If the app doesn't open, please install the APK first.</p>
+        <p class='hint' style='font-size: 0.9em; word-break: break-all;'>Token Code: <br><b>{token}</b></p>
+    </div>
+</body>
+</html>";
+            return Content(html, "text/html");
         }
 
         public class InviteRequest
